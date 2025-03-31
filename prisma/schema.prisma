@@ -1,0 +1,67 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model Users {
+  id             Int          @id @default(autoincrement())
+  username       String       @unique
+  fullName       String?
+  password       String
+  phoneNumber    Int
+  email          String       @unique
+  userTypeId     Int
+  userTypes      UserTypes    @relation(fields: [userTypeId], references: [id])
+  createdCourses Courses[]    @relation("CreatedBy")
+  enrollments    Enrollment[]
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+}
+
+model UserTypes {
+  id           Int     @id @default(autoincrement())
+  userTypeCode String  @unique
+  userTypeName String
+  users        Users[]
+}
+
+model Courses {
+  id               Int              @id @default(autoincrement())
+  courseCode       String           @unique
+  alias            String
+  courseName       String
+  title            String
+  description      String?
+  views            Int              @default(0)
+  imageUrl         String?
+  createdDate      DateTime
+  studentCount     Int              @default(0)
+  creatorId        Int?
+  creator          Users?           @relation("CreatedBy", fields: [creatorId], references: [id])
+  categoryId       Int
+  CourseCategories CourseCategories @relation(fields: [categoryId], references: [id])
+  enrollments      Enrollment[]
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
+}
+
+model CourseCategories {
+  id           Int       @id @default(autoincrement())
+  categoryCode String    @unique
+  categoryName String
+  courses      Courses[]
+}
+
+model Enrollment {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  courseId  Int
+  status    String   @default("pending")
+  user      Users    @relation(fields: [userId], references: [id])
+  course    Courses  @relation(fields: [courseId], references: [id])
+  createdAt DateTime @default(now())
+}
