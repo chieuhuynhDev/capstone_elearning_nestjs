@@ -1,4 +1,14 @@
-import { Controller, Get, Post, Body, Delete, Query } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Delete,
+  Query,
+  Patch,
+  ValidationPipe,
+  Param,
+} from '@nestjs/common';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
@@ -9,9 +19,9 @@ import { ApiTags } from '@nestjs/swagger';
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
-  @Post()
+  @Post('create-user')
   create(@Body() createUserDto: CreateUserDto) {
-    return this.usersService.create(createUserDto);
+    return this.usersService.createUser(createUserDto);
   }
 
   @Get('')
@@ -19,10 +29,10 @@ export class UsersController {
     return this.usersService.findAll();
   }
 
-  @Delete('delete')
+  @Delete(':id')
   // @UseGuards(JwtAuthGuard, RolesGuard) // Only GV
-  async deleteUser(@Body('username') username: string) {
-    return this.usersService.deleteUser(username);
+  async deleteUser(@Param('id') id: number) {
+    return this.usersService.deleteUser(+id);
   }
 
   @Get('get-user-pagination')
@@ -31,5 +41,15 @@ export class UsersController {
     @Query('pageSize') pageSize: number,
   ) {
     return this.usersService.getPaginatedUsers(page, pageSize);
+  }
+
+  @Get('search-user')
+  search(@Query('tuKhoa') tuKhoa: string) {
+    return this.usersService.searchUser(tuKhoa);
+  }
+
+  @Patch(':id')
+  async updateUser(@Body(ValidationPipe) updateUserDto: UpdateUserDto) {
+    return this.usersService.updateUser(updateUserDto);
   }
 }

@@ -6,6 +6,7 @@ import {
 } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
 import { PrismaService } from '../prisma/prisma.service';
+import { UpdateUserDto } from './dto/update-user.dto';
 
 @Injectable()
 export class UsersService {
@@ -37,68 +38,79 @@ export class UsersService {
     return listUser;
   }
 
-  async addUser(createUserDto: CreateUserDto) {
-    const { username, fullName, password, phoneNumber, email, userTypeId } =
-      createUserDto;
-
-    const existingUser = await this.prisma.users.findUnique({
-      where: { username },
-    });
-    if (existingUser) {
-      throw new BadRequestException('Username already exists');
-    }
-
-    const existingEmail = await this.prisma.users.findUnique({
-      where: { email },
-    });
-    if (existingEmail) {
-      throw new BadRequestException('Email already exists');
-    }
-
-    return this.prisma.users.create({
-      data: {
-        username,
-        fullName,
-        password,
-        phoneNumber,
-        email,
-        userTypes: {
-          connect: { id: userTypeId },
-        },
+  async createUser(data: CreateUserDto) {
+    const existed = await this.prisma.users.findFirst({
+      where: {
+        OR: [{ username: data.username }, { email: data.email }],
       },
     });
+
+    if (existed) {
+      throw new BadRequestException('Tài khoản hoặc email đã tồn tại');
+    }
+
+    return this.prisma.users.create({ data });
   }
 
-  async findByUsername(username: string) {
-    const user = await this.prisma.users.findUnique({
-      where: { username },
+  async searchUser(keyword: string) {
+    const result = await this.prisma.users.findMany({
+      where: {
+        OR: [
+          { username: { contains: keyword } },
+          { email: { contains: keyword } },
+          { fullName: { contains: keyword } },
+        ],
+      },
       include: { userTypes: true },
     });
-    if (!user) {
-      throw new NotFoundException('User not found');
-    }
-    return user;
+    return result;
   }
-  async deleteUser(username: string) {
-    const user = await this.prisma.users.findUnique({ where: { username } });
+  async deleteUser(id: number) {
+    const user = await this.prisma.users.findUnique({ where: { id } });
     if (!user) {
       throw new NotFoundException('User not found');
     }
     return this.prisma.users.delete({
-      where: { username },
-      select: {
-        username: true,
-        fullName: true,
-        email: true,
-      },
+      where: { id },
     });
   }
 
-  async updateUser(id: number, data: Partial<CreateUserDto>) {
-    return this.prisma.users.update({
+  async updateUser(dto: UpdateUserDto) {
+    const { id, fullName, phoneNumber, email } = dto;
+
+    const existingUser = await this.prisma.users.findUnique({
       where: { id },
-      data,
     });
+
+    if (!existingUser) {
+      throw new NotFoundException('Người dùng không tồn tại');
+    }
+
+    // ❗ Nếu email thay đổi → kiểm tra có bị trùng không
+    if (email && email !== existingUser.email) {
+      const emailExisted = await this.prisma.users.findFirst({
+        where: {
+          email,
+          NOT: { id },
+        },
+      });
+
+      if (emailExisted) {
+        throw new BadRequestException('Email đã được sử dụng bởi người khác');
+      }
+    }
+
+    const updatedUser = await this.prisma.users.update({
+      where: { id },
+      data: {
+        fullName,
+        phoneNumber,
+        email,
+      },
+    });
+
+    const { password: _, ...result } = updatedUser;
+    return result;
   }
 
   async getPaginatedUsers(page: number, pageSize: number) {

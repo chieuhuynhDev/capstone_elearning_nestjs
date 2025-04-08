@@ -21,6 +21,7 @@ async function bootstrap() {
   SwaggerModule.setup('api/docs', app, documentFactory);
   // Lọc bỏ route mặc định GET /
   delete documentFactory.paths['/'];
+  console.log(`Swagger UI is available on: http://localhost:${port}/api/docs`);
   await app.listen(port);
 }
 bootstrap();

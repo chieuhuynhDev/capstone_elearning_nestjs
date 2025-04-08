@@ -6,22 +6,22 @@ import {
   IsString,
   MinLength,
   IsNumber,
-  IsInt,
 } from 'class-validator';
 
-export class CreateUserDto {
-  @ApiProperty({ example: 'admin123' })
+export class RegisterDto {
+  @ApiProperty({ example: 'nguyenvana' })
   @IsNotEmpty()
   @IsString()
   username: string;
 
-  @ApiProperty({ example: 'Nguyễn Văn B' })
+  @ApiProperty({ example: 'Nguyễn Văn A' })
   @IsOptional()
   @IsString()
   fullName?: string;
 
   @ApiProperty({ example: '123456' })
   @IsNotEmpty()
+  @MinLength(6)
   password: string;
 
   @ApiProperty({ example: 987654321 })
@@ -29,13 +29,8 @@ export class CreateUserDto {
   @IsNumber()
   phoneNumber: number;
 
-  @ApiProperty({ example: 'admin@example.com' })
+  @ApiProperty({ example: 'nguyenvana@example.com' })
   @IsNotEmpty()
   @IsEmail()
   email: string;
-
-  @ApiProperty({ description: 'User type ID (1 for GV, 2 for HV)', example: 1 })
-  @IsNotEmpty()
-  @IsInt()
-  userTypeId: number;
 }

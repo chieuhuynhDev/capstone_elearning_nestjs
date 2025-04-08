@@ -6,10 +6,24 @@ import CoursesModule from './modules/courses/courses.module';
 import PrismaModule from './modules/prisma/prisma.module';
 import { UsersModule } from './modules/users/users.module';
 
+import { AuthModule } from './modules/auth/auth.module';
+import { AuthController } from './modules/auth/auth.controller';
+import { ServeStaticModule } from '@nestjs/serve-static';
+import { join } from 'path';
+
 @Global()
 @Module({
-  imports: [ConfigModule.forRoot(), CoursesModule, PrismaModule, UsersModule],
-  controllers: [AppController],
+  imports: [
+    ServeStaticModule.forRoot({
+      rootPath: join(__dirname, '..'),
+    }),
+    ConfigModule.forRoot(),
+    CoursesModule,
+    PrismaModule,
+    UsersModule,
+    AuthModule,
+  ],
+  controllers: [AppController, AuthController],
   providers: [AppService],
 })
 export class AppModule {}
