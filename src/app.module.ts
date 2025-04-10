@@ -10,6 +10,7 @@ import { AuthModule } from './modules/auth/auth.module';
 import { AuthController } from './modules/auth/auth.controller';
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { join } from 'path';
+import { EnrollmentModule } from './modules/enrollment/enrollment.module';
 
 @Global()
 @Module({
@@ -22,6 +23,7 @@ import { join } from 'path';
     PrismaModule,
     UsersModule,
     AuthModule,
+    EnrollmentModule,
   ],
   controllers: [AppController, AuthController],
   providers: [AppService],

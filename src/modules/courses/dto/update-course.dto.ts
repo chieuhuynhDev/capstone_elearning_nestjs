@@ -8,11 +8,6 @@ import {
 import { ApiProperty } from '@nestjs/swagger';
 
 export class UpdateCourseDto {
-  @ApiProperty({ description: 'ID of the course to update', example: 1 })
-  @IsInt()
-  @IsNotEmpty()
-  id: number;
-
   @ApiProperty({
     description: 'Course code (unique)',
     example: 'CS101',

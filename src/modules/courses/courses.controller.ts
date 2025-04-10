@@ -75,4 +75,17 @@ export default class CourseController {
   ) {
     return this.courseServie.uploadCourseImage(file, +courseId);
   }
+
+  // Lấy danh sách các khóa học theo danh mục
+  @Get('categories')
+  @ApiOperation({ summary: 'Get list of course categories' })
+  getCourseCategories() {
+    return this.courseServie.getCourseCategories();
+  }
+
+  @Get('by-category/:categoryCode')
+  @ApiOperation({ summary: 'Get courses by category code (e.g. FE, BE)' })
+  getCoursesByCategory(@Param('categoryCode') categoryCode: string) {
+    return this.courseServie.getCoursesByCategory(categoryCode);
+  }
 }

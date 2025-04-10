@@ -77,6 +77,7 @@ export default class CourseService {
     return this.prisma.courses.create({ data: dto });
   }
 
+  // cập nhật khóa học
   async updateCourse(id: number, dto: UpdateCourseDto) {
     const existed = await this.prisma.courses.findUnique({ where: { id } });
     if (!existed) throw new NotFoundException('Khóa học không tồn tại');
@@ -87,6 +88,7 @@ export default class CourseService {
     });
   }
 
+  // xóa khóa học
   async deleteCourse(id: number) {
     const existed = await this.prisma.courses.findUnique({ where: { id } });
     if (!existed) throw new NotFoundException('Khóa học không tồn tại');
@@ -94,6 +96,7 @@ export default class CourseService {
     return this.prisma.courses.delete({ where: { id } });
   }
 
+  // upload ảnh khóa học
   async uploadCourseImage(file: Express.Multer.File, courseId?: number) {
     if (!file) {
       throw new BadRequestException('No file uploaded');
@@ -123,5 +126,54 @@ export default class CourseService {
       message: 'Image uploaded successfully',
       imageUrl,
     };
+  }
+
+  // lấy danh mục khóa học
+  async getCourseCategories() {
+    return this.prisma.courseCategories.findMany({
+      select: {
+        categoryCode: true,
+        categoryName: true,
+      },
+    });
+  }
+
+  // lấy danh sách khóa học theo danh mục
+  async getCoursesByCategory(categoryCode: string) {
+    // Tìm danh mục theo mã
+    const category = await this.prisma.courseCategories.findUnique({
+      where: { categoryCode },
+    });
+
+    if (!category) {
+      throw new NotFoundException('Category not found');
+    }
+
+    // Lấy danh sách khóa học theo categoryId
+    const courses = await this.prisma.courses.findMany({
+      where: { categoryId: category.id },
+      include: {
+        creator: {
+          select: {
+            username: true,
+            fullName: true,
+            userTypes: {
+              select: {
+                userTypeCode: true,
+                userTypeName: true,
+              },
+            },
+          },
+        },
+        CourseCategories: {
+          select: {
+            categoryCode: true,
+            categoryName: true,
+          },
+        },
+      },
+    });
+
+    return courses;
   }
 }
