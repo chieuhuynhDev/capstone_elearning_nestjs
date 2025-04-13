@@ -45,6 +45,33 @@ export default class CourseService {
     return courses;
   }
 
+  async getCourseById(courseCode: string) {
+    const course = await this.prisma.courses.findUnique({
+      where: { courseCode },
+      include: {
+        CourseCategories: {
+          select: { categoryCode: true, categoryName: true },
+        },
+        creator: {
+          select: {
+            username: true,
+            fullName: true,
+            email: true,
+            userTypes: {
+              select: {
+                userTypeCode: true,
+                userTypeName: true,
+              },
+            },
+          },
+        },
+      },
+    });
+
+    if (!course) throw new NotFoundException('Course not found');
+    return course;
+  }
+
   async getCoursesByPagination(page: number, pageSize: number) {
     const [data, total] = await Promise.all([
       this.prisma.courses.findMany({
@@ -97,34 +124,26 @@ export default class CourseService {
   }
 
   // upload ảnh khóa học
-  async uploadCourseImage(file: Express.Multer.File, courseId?: number) {
-    if (!file) {
-      throw new BadRequestException('No file uploaded');
-    }
+  async uploadCourseImage(file: Express.Multer.File, courseCode: string) {
+    if (!file) throw new BadRequestException('No file uploaded');
+    if (!courseCode) throw new BadRequestException('courseCode is required');
 
-    const imageUrl = `/images/${file.filename}`;
+    const imageUrl = `/images/courses/${file.filename}`;
 
-    if (courseId) {
-      const course = await this.prisma.courses.findUnique({
-        where: { id: courseId },
-      });
-      if (!course) throw new NotFoundException('Course not found');
+    const course = await this.prisma.courses.findUnique({
+      where: { courseCode },
+    });
+    if (!course) throw new NotFoundException('Course not found');
 
-      await this.prisma.courses.update({
-        where: { id: courseId },
-        data: { imageUrl },
-      });
-
-      return {
-        message: 'Image uploaded and course updated',
-        imageUrl,
-        updatedCourseId: courseId,
-      };
-    }
+    await this.prisma.courses.update({
+      where: { courseCode },
+      data: { imageUrl },
+    });
 
     return {
       message: 'Image uploaded successfully',
       imageUrl,
+      updatedCourseId: courseCode,
     };
   }
 
@@ -175,5 +194,31 @@ export default class CourseService {
     });
 
     return courses;
+  }
+
+  // tìm kiếm khóa học theo tên, alias hoặc mã khóa học
+  async searchCourses(keyword: string) {
+    console.log(keyword);
+
+    return this.prisma.courses.findMany({
+      where: {
+        OR: [
+          { courseName: { contains: keyword } },
+          { alias: { contains: keyword } },
+          { courseCode: { contains: keyword } },
+        ],
+      },
+      include: {
+        CourseCategories: {
+          select: { categoryCode: true, categoryName: true },
+        },
+        creator: {
+          select: {
+            username: true,
+            fullName: true,
+          },
+        },
+      },
+    });
   }
 }

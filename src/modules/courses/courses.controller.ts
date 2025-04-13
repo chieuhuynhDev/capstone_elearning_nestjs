@@ -12,11 +12,12 @@ import {
   UseInterceptors,
 } from '@nestjs/common';
 import CourseService from './courses.service';
-import { ApiBody, ApiConsumes, ApiOperation, ApiQuery } from '@nestjs/swagger';
+import { ApiConsumes, ApiOperation, ApiQuery } from '@nestjs/swagger';
 import { CreateCourseDto } from './dto/create-course.dto';
 import { UpdateCourseDto } from './dto/update-course.dto';
 import { FileInterceptor } from '@nestjs/platform-express';
-import uploadLocal from 'src/common/multer/local.multer';
+import { createMulterConfig } from 'src/common/multer/local.multer';
+import { UploadCourseImageDto } from './dto/upload-course-image.dto';
 
 @Controller(`course`)
 export default class CourseController {
@@ -27,6 +28,20 @@ export default class CourseController {
     const result = await this.courseServie.getAllCourses();
     return result;
   }
+
+  @Get('detail/:courseCode')
+  @ApiOperation({ summary: 'Get course detail by courseCode' })
+  getCourseById(@Param('courseCode') courseCode: string) {
+    return this.courseServie.getCourseById(courseCode);
+  }
+
+  @Get('search-course')
+  @ApiOperation({ summary: 'Search course by keyword (name, alias, or code)' })
+  @ApiQuery({ name: 'keyword', required: true })
+  searchCourses(@Query('keyword') keyword: string) {
+    return this.courseServie.searchCourses(keyword);
+  }
+
   @Get('pagination')
   @ApiOperation({ summary: 'Get paginated courses' })
   @ApiQuery({ name: 'page' })
@@ -36,44 +51,6 @@ export default class CourseController {
     @Query('pageSize') pageSize: string,
   ) {
     return this.courseServie.getCoursesByPagination(+page, +pageSize);
-  }
-
-  @Post()
-  @ApiOperation({ summary: 'Create new course' })
-  createCourse(@Body() dto: CreateCourseDto) {
-    return this.courseServie.addCourse(dto);
-  }
-
-  @Patch(':id')
-  @ApiOperation({ summary: 'Update course' })
-  updateCourse(@Param('id') id: string, @Body() dto: UpdateCourseDto) {
-    return this.courseServie.updateCourse(+id, dto);
-  }
-
-  @Delete(':id')
-  @ApiOperation({ summary: 'Delete course' })
-  deleteCourse(@Param('id') id: string) {
-    return this.courseServie.deleteCourse(+id);
-  }
-
-  @Post('upload-image')
-  @ApiOperation({ summary: 'Upload image & update course' })
-  @ApiConsumes('multipart/form-data')
-  @ApiBody({
-    schema: {
-      type: 'object',
-      properties: {
-        file: { type: 'string', format: 'binary' },
-        courseId: { type: 'integer', example: 5 },
-      },
-    },
-  })
-  @UseInterceptors(FileInterceptor('file', uploadLocal))
-  uploadCourseImage(
-    @UploadedFile() file: Express.Multer.File,
-    @Body('courseId') courseId: string,
-  ) {
-    return this.courseServie.uploadCourseImage(file, +courseId);
   }
 
   // Lấy danh sách các khóa học theo danh mục
@@ -87,5 +64,36 @@ export default class CourseController {
   @ApiOperation({ summary: 'Get courses by category code (e.g. FE, BE)' })
   getCoursesByCategory(@Param('categoryCode') categoryCode: string) {
     return this.courseServie.getCoursesByCategory(categoryCode);
+  }
+
+  @Post()
+  @ApiOperation({ summary: 'Create new course' })
+  createCourse(@Body() dto: CreateCourseDto) {
+    return this.courseServie.addCourse(dto);
+  }
+
+  @Post('upload-image')
+  @ApiOperation({ summary: 'Upload course image and update' })
+  @ApiConsumes('multipart/form-data')
+  @UseInterceptors(
+    FileInterceptor('file', createMulterConfig('courses', 'course')),
+  )
+  uploadCourseImage(
+    @UploadedFile() file: Express.Multer.File,
+    @Body() body: UploadCourseImageDto,
+  ) {
+    return this.courseServie.uploadCourseImage(file, body.courseCode);
+  }
+
+  @Patch(':id')
+  @ApiOperation({ summary: 'Update course' })
+  updateCourse(@Param('id') id: string, @Body() dto: UpdateCourseDto) {
+    return this.courseServie.updateCourse(+id, dto);
+  }
+
+  @Delete(':id')
+  @ApiOperation({ summary: 'Delete course' })
+  deleteCourse(@Param('id') id: string) {
+    return this.courseServie.deleteCourse(+id);
   }
 }

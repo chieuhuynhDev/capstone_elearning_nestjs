@@ -7,14 +7,11 @@ import {
 import { CreateUserDto } from './dto/create-user.dto';
 import { PrismaService } from '../prisma/prisma.service';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { ChangePasswordDto } from './dto/change-password.dto';
 
 @Injectable()
 export class UsersService {
   constructor(private prisma: PrismaService) {}
-
-  create(createUserDto: CreateUserDto) {
-    return 'This action adds a new user';
-  }
 
   async findAll() {
     const listUser = await this.prisma.users.findMany({
@@ -36,6 +33,16 @@ export class UsersService {
     });
 
     return listUser;
+  }
+
+  async getUserRoles() {
+    return this.prisma.userTypes.findMany({
+      select: {
+        id: true,
+        userTypeCode: true,
+        userTypeName: true,
+      },
+    });
   }
 
   async createUser(data: CreateUserDto) {
@@ -143,6 +150,95 @@ export class UsersService {
       totalPage,
       totalUsers,
       data: users || [],
+    };
+  }
+
+  async getUserProfile(username: string) {
+    const user = await this.prisma.users.findUnique({
+      where: { username },
+      select: {
+        username: true,
+        fullName: true,
+        email: true,
+        phoneNumber: true,
+        userTypes: {
+          select: {
+            userTypeCode: true,
+            userTypeName: true,
+          },
+        },
+      },
+    });
+
+    if (!user) throw new NotFoundException('User not found');
+    return user;
+  }
+
+  async changePassword(dto: ChangePasswordDto) {
+    console.log('changePassword', dto);
+
+    const { username, oldPassword, newPassword } = dto;
+
+    const user = await this.prisma.users.findUnique({ where: { username } });
+    if (!user) throw new NotFoundException('User not found');
+
+    if (user.password !== oldPassword) {
+      throw new BadRequestException('Old password is incorrect');
+    }
+
+    const updated = await this.prisma.users.update({
+      where: { username },
+      data: { password: newPassword },
+    });
+
+    return { message: 'Password updated successfully' };
+  }
+
+  async uploadAvatar(file: Express.Multer.File, username: string) {
+    if (!file) throw new BadRequestException('No file uploaded');
+
+    const user = await this.prisma.users.findUnique({
+      where: { username },
+    });
+
+    if (!user) throw new NotFoundException('User not found');
+    const avatarUrl = `/images/avatars/${file.filename}`;
+    await this.prisma.users.update({
+      where: { username },
+      data: { avatar: avatarUrl },
+    });
+    return {
+      message: 'Avatar updated successfully',
+      avatarUrl,
+    };
+  }
+
+  async getCoursesUserNotEnrolled(username: string) {
+    const user = await this.prisma.users.findUnique({ where: { username } });
+    if (!user) throw new NotFoundException('User not found');
+
+    const enrolledCourses = await this.prisma.enrollment.findMany({
+      where: { userId: user.id },
+      select: { courseId: true },
+    });
+
+    const courseIds = enrolledCourses.map((e) => e.courseId);
+
+    const unregisteredCourses = await this.prisma.courses.findMany({
+      where: {
+        id: { notIn: courseIds },
+      },
+      select: {
+        id: true,
+        courseCode: true,
+        courseName: true,
+        imageUrl: true,
+      },
+    });
+
+    return {
+      username,
+      unregisteredCourses,
     };
   }
 }
