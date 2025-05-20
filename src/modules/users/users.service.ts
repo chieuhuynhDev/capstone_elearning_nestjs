@@ -8,6 +8,10 @@ import { CreateUserDto } from './dto/create-user.dto';
 import { PrismaService } from '../prisma/prisma.service';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { ChangePasswordDto } from './dto/change-password.dto';
+import {
+  comparePasswordHelper,
+  hashPasswordHelper,
+} from 'src/common/helpers/ultil';
 
 @Injectable()
 export class UsersService {
@@ -45,10 +49,13 @@ export class UsersService {
     });
   }
 
-  async createUser(data: CreateUserDto) {
+  async createUser(createUserDto: CreateUserDto) {
     const existed = await this.prisma.users.findFirst({
       where: {
-        OR: [{ username: data.username }, { email: data.email }],
+        OR: [
+          { username: createUserDto.username },
+          { email: createUserDto.email },
+        ],
       },
     });
 
@@ -56,7 +63,17 @@ export class UsersService {
       throw new BadRequestException('Tài khoản hoặc email đã tồn tại');
     }
 
-    return this.prisma.users.create({ data });
+    // hash password
+    const hashedPassword = await hashPasswordHelper(createUserDto.password);
+    const newUser = {
+      ...createUserDto,
+      password: hashedPassword,
+    };
+
+    const user = await this.prisma.users.create({ data: { ...newUser } });
+
+    const { password, ...result } = user;
+    return result;
   }
 
   async searchUser(keyword: string) {
@@ -175,20 +192,25 @@ export class UsersService {
   }
 
   async changePassword(dto: ChangePasswordDto) {
-    console.log('changePassword', dto);
-
     const { username, oldPassword, newPassword } = dto;
 
     const user = await this.prisma.users.findUnique({ where: { username } });
     if (!user) throw new NotFoundException('User not found');
 
-    if (user.password !== oldPassword) {
+    // So sánh password
+    const isPasswordValid = await comparePasswordHelper(
+      oldPassword,
+      user.password,
+    );
+
+    if (!isPasswordValid) {
       throw new BadRequestException('Old password is incorrect');
     }
-
-    const updated = await this.prisma.users.update({
+    // Hash password mới
+    const hashedNewPassword = await hashPasswordHelper(newPassword);
+    await this.prisma.users.update({
       where: { username },
-      data: { password: newPassword },
+      data: { password: hashedNewPassword },
     });
 
     return { message: 'Password updated successfully' };

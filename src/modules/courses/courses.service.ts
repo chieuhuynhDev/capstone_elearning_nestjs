@@ -203,9 +203,9 @@ export default class CourseService {
     return this.prisma.courses.findMany({
       where: {
         OR: [
-          { courseName: { contains: keyword } },
+          { title: { contains: keyword } },
           { alias: { contains: keyword } },
-          { courseCode: { contains: keyword } },
+          { description: { contains: keyword } },
         ],
       },
       include: {
