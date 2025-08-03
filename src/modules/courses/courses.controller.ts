@@ -11,6 +11,10 @@ import {
   UploadedFile,
   UseInterceptors,
 } from '@nestjs/common';
+import { UseGuards } from '@nestjs/common';
+import { Roles } from 'src/common/guards/roles.decorator';
+import { RolesGuard } from 'src/common/guards/roles.guard';
+import { AuthGuard } from '@nestjs/passport';
 import CourseService from './courses.service';
 import { ApiConsumes, ApiOperation, ApiQuery } from '@nestjs/swagger';
 import { CreateCourseDto } from './dto/create-course.dto';
@@ -68,6 +72,8 @@ export default class CourseController {
 
   @Post()
   @ApiOperation({ summary: 'Create new course' })
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles('GV')
   createCourse(@Body() dto: CreateCourseDto) {
     return this.courseServie.addCourse(dto);
   }
@@ -87,12 +93,16 @@ export default class CourseController {
 
   @Patch(':id')
   @ApiOperation({ summary: 'Update course' })
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles('GV')
   updateCourse(@Param('id') id: string, @Body() dto: UpdateCourseDto) {
     return this.courseServie.updateCourse(+id, dto);
   }
 
   @Delete(':id')
   @ApiOperation({ summary: 'Delete course' })
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles('GV')
   deleteCourse(@Param('id') id: string) {
     return this.courseServie.deleteCourse(+id);
   }

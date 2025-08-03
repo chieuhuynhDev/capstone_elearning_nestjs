@@ -93,6 +93,7 @@ export default class CourseService {
   }
 
   async addCourse(dto: CreateCourseDto) {
+    console.log('Adding course:', dto);
     const existed = await this.prisma.courses.findUnique({
       where: { courseCode: dto.courseCode },
     });

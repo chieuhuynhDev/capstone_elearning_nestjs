@@ -38,13 +38,18 @@ export class AuthService {
       throw new BadRequestException('Mât khẩu không chính xác');
     }
 
-    const payload = { sub: userExists.id, username: userExists.username };
+    const payload = {
+      sub: userExists.id,
+      username: userExists.username,
+      role: userExists.userTypes.userTypeCode, // Thêm role vào payload
+    };
 
     const accessToken = await this.jwtService.signAsync(payload);
 
     return {
       accessToken: accessToken,
       refreshToken: 'chưa tạo',
+      role: userExists.userTypes.userTypeCode, // Trả về role
     };
 
     //   user: {

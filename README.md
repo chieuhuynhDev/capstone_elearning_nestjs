@@ -96,3 +96,52 @@ Nest is an MIT-licensed open source project. It can grow thanks to the sponsors 
 ## License
 
 Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+
+## Guide to use copilot in VSCode
+
+- Git copilot > Build local workspace index (cmd + shift + p)
+- Question (prompt) structure:
+
+```
+<context>
+- task đang làm, ví dụ: "Tôi đang làm một ứng dụng NestJS, tôi muốn tạo một module mới"
+- miêu tả issue đang gặp phải, đính kèm file liên quan
+- đính kèm file liên quan, ví dụ: "Tôi đính kèm file app.module.ts, app.controller.ts, app.service.ts"
+
+<question/command>:
+- hãy implement module mới này.
+- hãy phân tích và giải thích lý do lỗi.
+
+<expected output>:
+<example>:
+```
+
+Example:
+
+```
+Tôi đang làm tính năng phân quyền cho project này.
+Hãy phân cấu trúc hiện tại của project này. Để làm được tính năng trên, thì cần thay đổi những gì?
+chỉ cần implement đơn giản trước (nhưng có thể mở rộng sau này)
+
+chưa thay đổi code lúc này, chỉ thảo luận để hiểu rõ vấn đề và lên plan để cài đặt.
+```
+
+```
+ok, hãy implement như những gì đã thảo luận.
+```
+
+curl -X 'POST' \
+ 'http://localhost:3069/api/course' \
+ -H 'accept: _/_' \
+ -H 'Content-Type: application/json' \
+ -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOjcsInVzZXJuYW1lIjoiY2hpZXUxNTJAZ21haWwuY29tIiwicm9sZSI6IkdWIiwiaWF0IjoxNzU0MjE0NTUzLCJleHAiOjE3NTQzMDA5NTN9.ELqqTsZGzhBhw2wMbGLxfbluSKqSNv_e0fRG68FKNFU" \
+ -d '{
+"courseCode": "CS101",
+"alias": "intro-cs",
+"courseName": "Introduction to Computer Science",
+"title": "Intro to CS",
+"description": "This course covers the basics of computer science.",
+"imageUrl": "https://example.com/image.jpg",
+"createdDate": "2025-04-03T10:00:00.000Z",
+"categoryId": 1
+}'

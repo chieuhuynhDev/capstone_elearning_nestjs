@@ -7,7 +7,6 @@ import PrismaModule from './modules/prisma/prisma.module';
 import { UsersModule } from './modules/users/users.module';
 
 import { AuthModule } from './modules/auth/auth.module';
-import { AuthController } from './modules/auth/auth.controller';
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { join } from 'path';
 import { EnrollmentModule } from './modules/enrollment/enrollment.module';
@@ -25,7 +24,7 @@ import { EnrollmentModule } from './modules/enrollment/enrollment.module';
     AuthModule,
     EnrollmentModule,
   ],
-  controllers: [AppController, AuthController],
+  controllers: [AppController],
   providers: [AppService],
 })
 export class AppModule {}

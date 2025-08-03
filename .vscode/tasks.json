@@ -1,0 +1,13 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "type": "shell",
+      "label": "Start NestJS Project",
+      "command": "npm run start:dev",
+      "group": "build",
+      "isBackground": true,
+      "problemMatcher": ["$tsc"]
+    }
+  ]
+}
